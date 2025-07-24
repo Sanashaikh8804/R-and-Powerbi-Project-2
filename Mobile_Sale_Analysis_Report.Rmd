@@ -1,0 +1,87 @@
+---
+title: "Report 1"
+author: "Sana Zakir Shaikh"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+# 📦 Data Cleaning
+
+In this section, we load the dataset, check for missing values, clean column names, and create a combined date column.
+
+\`\`\`{r setup, include=TRUE} library(readxl) library(janitor) library(dplyr) library(lubridate)
+
+Load data
+
+data \<- read_excel("mobile.xlsx")
+
+Clean column names
+
+data \<- clean_names(data)
+
+Check for missing values
+
+sum(is.na(data)) colMeans(is.na(data)) \* 100
+
+Create full date column
+
+data \<- data %\>% mutate( full_date = make_date(year = year, month = month, day = day) )
+
+# Calculate total sales
+
+data$total_sales <- data$units_sold \* data\$price_per_unit
+
+# Plot histogram and density
+
+hist(data\$total_sales, main = "Histogram of Total Sales", xlab = "Total Sales", col = "skyblue", breaks = 40)
+
+plot(density(data\$total_sales), main = "Density Plot of Total Sales", xlab = "Total Sales", col = "darkgreen", lwd = 2)
+
+![Density Plot - Raw](Mobile_Density_Total_Sales.png)
+
+# QQ plot
+
+qqnorm(data$total_sales, main = "QQ Plot of Total Sales")
+qqline(data$total_sales, col = "red")
+
+![QQ Plot - Raw](Mobile_Q_Plot.png)
+
+data$log_sales <- log(data$total_sales)
+
+plot(density(data\$log_sales), main = "Density Plot After Log Transformation", xlab = "Log(Total Sales)", col = "blue", lwd = 2)
+
+![Density After Log Transformation (Left Skewed)](Mobile_Total_Sales_1.png)
+
+data$sqrt_sales <- sqrt(data$total_sales) plot(density(data\$sqrt_sales), main = "Density After Square Root Transformation", xlab = "Sqrt(Total Sales)", col = "purple", lwd = 2)
+
+## Comparison of Total Sales Transformations
+
+We applied transformations to the `Total Sales` column to normalize the distribution. Below is a comparison between the original, log-transformed (left-skewed), and sqrt-transformed (approximately normal) distributions.
+
+\`\`\`{r comparison-density-plots, fig.width=12, fig.height=4, echo=TRUE, message=FALSE, warning=FALSE} \# Required Libraries library(ggplot2) library(patchwork)
+
+# Create the three plots
+
+p1 \<- ggplot(data, aes(x = total_sales)) + geom_density(fill = "darkgreen", alpha = 0.6) + labs(title = "Original (Right Skewed)", x = "Total Sales", y = "Density") + theme_minimal()
+
+p2 \<- ggplot(data, aes(x = log_sales)) + geom_density(fill = "blue", alpha = 0.6) + labs(title = "Log Transformed (Left Skewed)", x = "Log(Total Sales)", y = "Density") + theme_minimal()
+
+p3 \<- ggplot(data, aes(x = sqrt_sales)) + geom_density(fill = "purple", alpha = 0.6) + labs(title = "Sqrt Transformed (Nearly Normal)", x = "Sqrt(Total Sales)", y = "Density") + theme_minimal()
+
+# Combine plots side-by-side
+
+p1 + p2 + p3
+
+## Comparison of Distribution Shapes
+
+We observed how different transformations affect the shape of the `Total Sales` distribution.
+
+Below is the image showing:
+
+-   Original (right skewed)
+-   Log transformed (left skewed)
+-   Square root transformed (approximately normal)
+
+![Final Comparison of Density Plots](Mobile_Final_Comparison.png)
